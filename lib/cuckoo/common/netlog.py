@@ -46,6 +46,18 @@ TYPECONVERTERS = {
 # 20 Mb max message length.
 MAX_MESSAGE_LENGTH = 20 * 1024 * 1024
 
+CALL_METRIC_FIELDS = (
+    "ts",
+    "perf_counter",
+    "mem_load",
+    "proc_kernel_time_ms",
+    "proc_user_time_ms",
+    "proc_cpu_delta_ms",
+    "wall_delta_ms",
+    "proc_cpu_load",
+    "sys_cpu_load",
+)
+
 
 def pointer_converter_32bit(v):
     return f"0x{v % 2 ** 32:08x}"
@@ -218,8 +230,9 @@ class BsonParser:
             caller = dec.get("R", 0)
             parentcaller = dec.get("P", 0)
             repeated = dec.get("r", 0)
+            metrics = {field: dec[field] for field in CALL_METRIC_FIELDS if field in dec}
 
-            context = [index, repeated, 1, 0, tid, time, caller, parentcaller]
+            context = [index, repeated, 1, 0, tid, time, caller, parentcaller, metrics]
 
             if mtype == "info":
                 # API call index info message, explaining the argument names, etc.

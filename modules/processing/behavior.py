@@ -313,7 +313,8 @@ class ParseProcessLog(list):
         @param category: win32 function category
         @param arguments: arguments to the api call
         """
-        apiindex, repeated, status, returnval, tid, timediff, caller, parentcaller = context
+        apiindex, repeated, status, returnval, tid, timediff, caller, parentcaller = context[:8]
+        metrics = context[8] if len(context) > 8 else {}
 
         current_time = self.first_seen + datetime.timedelta(0, 0, timediff * 1000)
         timestring = logtime(current_time)
@@ -321,6 +322,8 @@ class ParseProcessLog(list):
         self.lastcall = self._parse(
             [timestring, tid, caller, parentcaller, category, apiname, repeated, status, returnval] + arguments
         )
+        if self.lastcall and metrics:
+            self.lastcall["metrics"] = metrics
 
     def log_error(self, emsg):
         """Log an error"""

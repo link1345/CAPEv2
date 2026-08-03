@@ -1,14 +1,21 @@
-<table class="table table-dark table-bordered border-secondary" style="table-layout: fixed;">
+<div class="table-responsive">
+<table class="table table-dark table-bordered border-secondary" style="min-width: 1800px;">
     <thead>
         <tr>
-            <th width="10%">Time</th>
-            <th width="3%">TID</th>
-            <th width="8%">Caller</th>
-            <th width="15%">API</th>
-            <th width="42%">Arguments</th>
-            <th width="5%">Status</th>
-            <th width="11%">Return</th>
-            <th width="6%">Repeated</th>
+            <th>Time</th>
+            <th>TID</th>
+            <th>Caller</th>
+            <th>API</th>
+            <th>Arguments</th>
+            <th>Duration</th>
+            <th>Working Set</th>
+            <th>Peak Working Set</th>
+            <th>Private Usage</th>
+            <th>Pagefile Usage</th>
+            <th>Peak Pagefile Usage</th>
+            <th>Status</th>
+            <th>Return</th>
+            <th>Repeated</th>
         </tr>
     </thead>
     <tbody>
@@ -19,3 +26,4 @@
     {% endfor %}
     </tbody>
 </table>
+</div>

@@ -197,16 +197,6 @@ class ParseProcessLog(list):
         self.call_id = 0
         self.api_pointer = 0
 
-    def compare_calls(self, a, b):
-        """Compare two calls for equality. Same implementation as before netlog.
-        @param a: call a
-        @param b: call b
-        @return: True if a == b else False
-        """
-        return (
-            a["api"] == b["api"] and a["status"] == b["status"] and a["arguments"] == b["arguments"] and a["return"] == b["return"]
-        )
-
     def wait_for_lastcall(self):
         """If there is no lastcall, iterate through messages till a call is found or EOF.
         To get the next call, set self.lastcall to None before calling this function
@@ -236,12 +226,6 @@ class ParseProcessLog(list):
             raise StopIteration()
 
         nextcall, self.lastcall = self.lastcall, None
-
-        self.wait_for_lastcall()
-        while self.lastcall and self.compare_calls(nextcall, self.lastcall):
-            nextcall["repeated"] += self.lastcall["repeated"] + 1
-            self.lastcall = None
-            self.wait_for_lastcall()
 
         nextcall["id"] = self.call_id
         self.call_id += 1

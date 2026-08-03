@@ -13,6 +13,24 @@
         <br />
     {% endfor %}
 </td>
+<td class="text-nowrap">
+    {% if call.metrics and "duration_us" in call.metrics %}{{call.metrics.duration_us|floatformat:3}} µs{% else %}—{% endif %}
+</td>
+<td class="text-nowrap">
+    {% if call.metrics and "working_set_bytes" in call.metrics %}{{call.metrics.working_set_bytes|filesizeformat}}{% else %}—{% endif %}
+</td>
+<td class="text-nowrap">
+    {% if call.metrics and "peak_working_set_bytes" in call.metrics %}{{call.metrics.peak_working_set_bytes|filesizeformat}}{% else %}—{% endif %}
+</td>
+<td class="text-nowrap">
+    {% if call.metrics and "private_usage_bytes" in call.metrics %}{{call.metrics.private_usage_bytes|filesizeformat}}{% else %}—{% endif %}
+</td>
+<td class="text-nowrap">
+    {% if call.metrics and "pagefile_usage_bytes" in call.metrics %}{{call.metrics.pagefile_usage_bytes|filesizeformat}}{% else %}—{% endif %}
+</td>
+<td class="text-nowrap">
+    {% if call.metrics and "peak_pagefile_usage_bytes" in call.metrics %}{{call.metrics.peak_pagefile_usage_bytes|filesizeformat}}{% else %}—{% endif %}
+</td>
 <td>
     {% if call.status %}
         success

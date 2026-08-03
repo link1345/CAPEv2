@@ -47,15 +47,15 @@ TYPECONVERTERS = {
 MAX_MESSAGE_LENGTH = 20 * 1024 * 1024
 
 CALL_METRIC_FIELDS = (
-    "ts",
-    "perf_counter",
-    "mem_load",
-    "proc_kernel_time_ms",
-    "proc_user_time_ms",
-    "proc_cpu_delta_ms",
-    "wall_delta_ms",
-    "proc_cpu_load",
-    "sys_cpu_load",
+    "qpc_start",
+    "qpc_end",
+    "qpc_frequency",
+    "duration_us",
+    "working_set_bytes",
+    "peak_working_set_bytes",
+    "private_usage_bytes",
+    "pagefile_usage_bytes",
+    "peak_pagefile_usage_bytes",
 )
 
 

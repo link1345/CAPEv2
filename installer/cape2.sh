@@ -136,6 +136,9 @@ LIB_VERSION=11.9.0
 DIE_VERSION="3.10"
 TOR_SOCKET_TIMEOUT="60"
 CAPE_ROOT="${CAPE_ROOT:-/opt/CAPEv2}"
+CAPEMON_ROOT="${CAPEMON_ROOT:-/opt/capemon}"
+CAPE_REPOSITORY="https://github.com/link1345/CAPEv2.git"
+CAPEMON_REPOSITORY="https://github.com/link1345/capemon.git"
 
 USE_UV=${USE_UV:-false}
 
@@ -725,7 +728,7 @@ EOL
         systemctl enable mongos.service
         systemctl start mongos.service
 
-        echo -e "\n\n\n[+] CAPE distributed documentation: https://github.com/kevoreilly/CAPEv2/blob/master/docs/book/src/usage/dist.rst"
+        echo -e "\n\n\n[+] CAPE distributed documentation: https://github.com/link1345/CAPEv2/blob/master/docs/book/src/usage/dist.rst"
         echo -e "\t https://docs.mongodb.com/manual/tutorial/enable-authentication/"
         echo -e "\t https://docs.mongodb.com/manual/administration/security-checklist/"
         echo -e "\t https://docs.mongodb.com/manual/core/security-users/#sharding-security"
@@ -1318,9 +1321,16 @@ function install_CAPE() {
 
     if [ ! -d "$CAPE_ROOT" ]; then
         mkdir -p "$(dirname "$CAPE_ROOT")"
-        git clone https://github.com/kevoreilly/CAPEv2/ "$CAPE_ROOT"
+        git clone "$CAPE_REPOSITORY" "$CAPE_ROOT"
+    fi
+
+    echo "[+] Installing capemon source"
+    if [ ! -d "$CAPEMON_ROOT" ]; then
+        mkdir -p "$(dirname "$CAPEMON_ROOT")"
+        git clone "$CAPEMON_REPOSITORY" "$CAPEMON_ROOT"
     fi
     chown ${USER}:${USER} -R "$CAPE_ROOT"/
+    chown ${USER}:${USER} -R "$CAPEMON_ROOT"/
     if [ "$USE_UV" = "true" ] || [ "$USE_UV" = "True" ]; then
         sudo -u ${USER} /usr/local/bin/uv venv "$CAPE_ROOT/.venv"
     fi

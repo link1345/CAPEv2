@@ -197,16 +197,6 @@ class ParseProcessLog(list):
         self.call_id = 0
         self.api_pointer = 0
 
-    def compare_calls(self, a, b):
-        """Compare two calls for equality. Same implementation as before netlog.
-        @param a: call a
-        @param b: call b
-        @return: True if a == b else False
-        """
-        return (
-            a["api"] == b["api"] and a["status"] == b["status"] and a["arguments"] == b["arguments"] and a["return"] == b["return"]
-        )
-
     def wait_for_lastcall(self):
         """If there is no lastcall, iterate through messages till a call is found or EOF.
         To get the next call, set self.lastcall to None before calling this function
@@ -236,12 +226,6 @@ class ParseProcessLog(list):
             raise StopIteration()
 
         nextcall, self.lastcall = self.lastcall, None
-
-        self.wait_for_lastcall()
-        while self.lastcall and self.compare_calls(nextcall, self.lastcall):
-            nextcall["repeated"] += self.lastcall["repeated"] + 1
-            self.lastcall = None
-            self.wait_for_lastcall()
 
         nextcall["id"] = self.call_id
         self.call_id += 1
@@ -313,7 +297,8 @@ class ParseProcessLog(list):
         @param category: win32 function category
         @param arguments: arguments to the api call
         """
-        apiindex, repeated, status, returnval, tid, timediff, caller, parentcaller = context
+        apiindex, repeated, status, returnval, tid, timediff, caller, parentcaller = context[:8]
+        metrics = context[8] if len(context) > 8 else {}
 
         current_time = self.first_seen + datetime.timedelta(0, 0, timediff * 1000)
         timestring = logtime(current_time)
@@ -321,6 +306,8 @@ class ParseProcessLog(list):
         self.lastcall = self._parse(
             [timestring, tid, caller, parentcaller, category, apiname, repeated, status, returnval] + arguments
         )
+        if self.lastcall and metrics:
+            self.lastcall["metrics"] = metrics
 
     def log_error(self, emsg):
         """Log an error"""

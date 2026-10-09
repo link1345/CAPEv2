@@ -46,6 +46,18 @@ TYPECONVERTERS = {
 # 20 Mb max message length.
 MAX_MESSAGE_LENGTH = 20 * 1024 * 1024
 
+CALL_METRIC_FIELDS = (
+    "qpc_start",
+    "qpc_end",
+    "qpc_frequency",
+    "duration_us",
+    "working_set_bytes",
+    "peak_working_set_bytes",
+    "private_usage_bytes",
+    "pagefile_usage_bytes",
+    "peak_pagefile_usage_bytes",
+)
+
 
 def pointer_converter_32bit(v):
     return f"0x{v % 2 ** 32:08x}"
@@ -186,7 +198,7 @@ class BsonParser:
     def read_next_message(self):
         # self.fd.seek(0)
         while True:
-            data = self.fd.read(4)
+            data = bytes(self.fd.read(4))
             if not data:
                 return
 
@@ -199,7 +211,7 @@ class BsonParser:
                 log.critical("BSON message larger than MAX_MESSAGE_LENGTH, stopping handler")
                 return False
 
-            data += self.fd.read(blen - 4)
+            data += bytes(self.fd.read(blen - 4))
 
             if len(data) < blen:
                 log.critical("BsonParser lacking data")
@@ -315,6 +327,7 @@ class BsonParser:
                 arguments = list(argdict.items())
                 arguments += list(dec.get("aux", {}).items())
 
+                context.append({field: dec[field] for field in CALL_METRIC_FIELDS if field in dec})
                 self.fd.log_call(context, apiname, category, arguments)
 
             return True

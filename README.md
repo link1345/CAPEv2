@@ -148,10 +148,10 @@ To set a breakpoint at the module entry point, `ep` is used instead of an addres
 
 Options `action0` - `action3` allow actions to be performed when breakpoints are hit, such as dumping memory regions (e.g. `action0=dumpebx`) or changing the execution control flow (e.g. `action1=skip`). CAPE`s documentation contains further examples of such actions.
 
-### [capemon](https://github.com/kevoreilly/capemon)
+### [capemon](https://github.com/link1345/capemon)
 The repository containing the code for the CAPE's monitor is distinct.
 
-### Updates summary [changelog](https://github.com/kevoreilly/CAPEv2/blob/master/changelog.md)
+### Updates summary [changelog](https://github.com/link1345/CAPEv2/blob/master/changelog.md)
 
 ### [Community contributions](https://github.com/CAPESandbox/community)
 There is a community repository of signatures containing several hundred signatures developed by the CAPE community. All new community feature should be pushed to that repo. Later they can be moved to core if devs are able and willing to maintain them.
@@ -169,12 +169,12 @@ A huge thank you to @D00m3dR4v3n for single-handedly porting CAPE to Python 3.
 1. Become familiar with the [documentation](https://capev2.readthedocs.io/en/latest/) and __do read ALL__ config files inside of `conf` folder!
 2. For best compabitility we strongly suggest installing on [Ubuntu 24.04 LTS](https://ubuntu.com/#download) and using Windows 10 or Windows 11 23H2 as target.
 3. `kvm-qemu.sh` and `cape2.sh` __SHOULD BE__ executed from `tmux` session to prevent any OS problems if ``ssh`` connections breaks.
-4. [KVM](https://github.com/kevoreilly/CAPEv2/blob/master/installer/kvm-qemu.sh) is recommended as the hypervisor.
+4. [KVM](https://github.com/link1345/CAPEv2/blob/master/installer/kvm-qemu.sh) is recommended as the hypervisor.
  * Replace `<username>` with a real pattern.
  * You need to replace all `<WOOT>` inside!
  * Read it! You must understand what it does! It has configuration in header of the script.
  * `sudo ./kvm-qemu.sh all <username> 2>&1 | tee kvm-qemu.log`
-4. To install CAPE itself, [cape2.sh](https://github.com/kevoreilly/CAPEv2/blob/master/installer/cape2.sh) with all optimizations
+4. To install CAPE itself, [cape2.sh](https://github.com/link1345/CAPEv2/blob/master/installer/cape2.sh) with all optimizations
     * Read and understand what it does! This is not a silver bullet for all your problems! It has configuration in header of the script.
     * `sudo ./cape2.sh base 2>&1 | tee cape.log`
 5. After installing everything save both installation logs as gold!
@@ -198,7 +198,7 @@ A huge thank you to @D00m3dR4v3n for single-handedly porting CAPE to Python 3.
 * [step by step](https://www.doomedraven.com/2020/04/how-to-create-virtual-machine-with-virt.html)
 
 ## Virtual machine core dependency
-* [choco.bat](https://github.com/kevoreilly/CAPEv2/blob/master/installer/choco.bat)
+* [choco.bat](https://github.com/link1345/CAPEv2/blob/master/installer/choco.bat)
 
 ## How to update
 * CAPE: `git pull`
@@ -217,14 +217,14 @@ git reset HEAD~1
 
 #### With merge
 ```
-# make sure kevoreilly repo has been added as a remote (only needs to be done once)
-git remote add kevoreilly https://github.com/kevoreilly/CAPEv2.git
-# make sure all your changes are commited on the branch which you will be merging
+# make sure origin points to the link1345 repository
+git remote set-url origin https://github.com/link1345/CAPEv2.git
+# make sure all your changes are committed on the branch which you will be merging
 git commit -a -m '<your commit message goes here>'
-# fetch changes from kevoreilly repo
-git fetch kevoreilly
-# merge kevoreilly master branch into your current branch
-git merge kevoreilly/master
+# fetch changes from the link1345 repository
+git fetch origin
+# merge origin master branch into your current branch
+git merge origin/master
 # fix merge conflicts if needed
 # push to your repo if desired
 git push

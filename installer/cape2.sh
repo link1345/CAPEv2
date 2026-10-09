@@ -1,89 +1,10 @@
 #!/bin/bash
 # set -ex
 # By @doomedraven - https://twitter.com/D00m3dR4v3n
-# Copyright (C) 2011-2023 doomedraven.
+# Copyright (C) 2011-2026 doomedraven.
 # See the file 'LICENSE.md' for copying permission.
 
 # Huge thanks to: @NaxoneZ @kevoreilly @ENZOK @wmetcalf @ClaudioWayne
-
-# Ensure non-interactive mode for apt commands globally to prevent prompts during automated installations
-export DEBIAN_FRONTEND=noninteractive
-
-# Static values
-# Where to place everything
-# CAPE TcpDump will sniff this interface
-NETWORK_IFACE=virbr1
-# On which IP TOR should listen
-IFACE_IP="192.168.1.1"
-# Confiures default network interface ip route table
-INTERNET_IFACE=$(ip route | grep '^default'|awk '{print $5}')
-# DB password
-PASSWD="SuperPuperSecret"
-# Only in case if you using distributed CAPE And MongoDB sharding.
-DIST_MASTER_IP="192.168.1.1"
-USER="cape"
-# https://nginx.org/en/linux_packages.html
-nginx_version=1.27.3
-prometheus_version=2.20.1
-grafana_version=7.1.5
-node_exporter_version=1.0.1
-# https://github.com/crowdsecurity/cs-nginx-bouncer/releases/download/v$CSNB_VERSION/crowdsec-nginx-bouncer.tgz
-CSNB_VERSION="1.0.8"
-# if set to 1, enables snmpd and other various bits to support
-# monitoring via LibreNMS
-librenms_enable=0
-# snmp v1/2c community string to use
-snmp_community=ChangeMePublicRO
-# value for agentaddress... see snmpd.conf(5)
-# if blank the default will be used
-snmp_agentaddress=""
-snmp_location='Rack, Room, Building, City, Country [GPSX,Y]'
-snmp_contact='Foo <foo@bar>'
-clamav_enable=0
-# enable IPMI sensor checking with LibreNMS
-librenms_ipmi=0
-# args to pass to /usr/lib/nagios/plugins/check_mongodb.py
-librenms_mongo_args=''
-# warn value for the clamav check
-librenms_clamav_warn=2
-# crit value for the clamav check
-librenms_clamav_crit=3
-# enable librenms support for mdadm
-librenms_mdadm_enable=0
-
-# requires lsi_mrdsnmpmain
-# https://docs.librenms.org/Extensions/Applications/#megaraid
-librenms_megaraid_enable=0
-
-# disabling this will result in the web interface being disabled
-MONGO_ENABLE=1
-# Must match libvirt version!
-LIB_VERSION=11.9.0
-DIE_VERSION="3.10"
-TOR_SOCKET_TIMEOUT="60"
-CAPE_ROOT="${CAPE_ROOT:-/opt/CAPEv2}"
-CAPEMON_ROOT="${CAPEMON_ROOT:-/opt/capemon}"
-CAPE_REPOSITORY="https://github.com/link1345/CAPEv2.git"
-CAPEMON_REPOSITORY="https://github.com/link1345/capemon.git"
-
-USE_UV=${USE_UV:-false}
-PYTHON_MGR="/etc/poetry/bin/poetry"
-PYTHON_MGR_CMD="run"
-PYTHON_MGR_INSTALL="install"
-
-# if a config file is present, read it in
-if [ -f "./cape-config.sh" ]; then
-    . ./cape-config.sh
-fi
-
-UBUNTU_VERSION=$(lsb_release -rs)
-OS="$(uname -s)"
-MAINTAINER="$(whoami) "_"$(hostname)"
-ARCH="$(dpkg --print-architecture)"
-
-function issues() {
-    cat "No known problems yet"
-}
 
 function usage() {
 cat << EndOfHelp
@@ -146,6 +67,109 @@ cat << EndOfHelp
     Cuckoo V2 customizations neat howto
         * https://www.adlice.com/cuckoo-sandbox-customization-v2/
 EndOfHelp
+}
+
+# Check for help options or empty arguments early to avoid running host commands on loading
+if [ "$1" = "-h" ] || [ "$1" = "--help" ] || [ "$1" = "help" ] || [ "$1" = "-help" ]; then
+    usage
+    exit 0
+fi
+
+if [ $# -eq 0 ]; then
+    usage
+    exit 1
+fi
+
+# Ensure non-interactive mode for apt commands globally to prevent prompts during automated installations
+export DEBIAN_FRONTEND=noninteractive
+
+# Static values
+# Where to place everything
+# CAPE TcpDump will sniff this interface
+NETWORK_IFACE=virbr1
+# On which IP TOR should listen
+IFACE_IP="192.168.1.1"
+# Confiures default network interface ip route table
+INTERNET_IFACE=$(ip route | grep '^default'|awk '{print $5}')
+# DB password
+PASSWD="SuperPuperSecret"
+# Only in case if you using distributed CAPE And MongoDB sharding.
+DIST_MASTER_IP="192.168.1.1"
+USER="cape"
+# https://nginx.org/en/linux_packages.html
+nginx_version=1.27.3
+prometheus_version=2.20.1
+grafana_version=7.1.5
+node_exporter_version=1.0.1
+# https://github.com/crowdsecurity/cs-nginx-bouncer/releases/download/v$CSNB_VERSION/crowdsec-nginx-bouncer.tgz
+CSNB_VERSION="1.0.8"
+# if set to 1, enables snmpd and other various bits to support
+# monitoring via LibreNMS
+librenms_enable=0
+# snmp v1/2c community string to use
+snmp_community=ChangeMePublicRO
+# value for agentaddress... see snmpd.conf(5)
+# if blank the default will be used
+snmp_agentaddress=""
+snmp_location='Rack, Room, Building, City, Country [GPSX,Y]'
+snmp_contact='Foo <foo@bar>'
+clamav_enable=0
+# enable IPMI sensor checking with LibreNMS
+librenms_ipmi=0
+# args to pass to /usr/lib/nagios/plugins/check_mongodb.py
+librenms_mongo_args=''
+# warn value for the clamav check
+librenms_clamav_warn=2
+# crit value for the clamav check
+librenms_clamav_crit=3
+# enable librenms support for mdadm
+librenms_mdadm_enable=0
+
+# requires lsi_mrdsnmpmain
+# https://docs.librenms.org/Extensions/Applications/#megaraid
+librenms_megaraid_enable=0
+
+# disabling this will result in the web interface being disabled
+MONGO_ENABLE=1
+# Must match libvirt version!
+LIB_VERSION=11.9.0
+DIE_VERSION="3.10"
+TOR_SOCKET_TIMEOUT="60"
+CAPE_ROOT="${CAPE_ROOT:-/opt/CAPEv2}"
+CAPEMON_ROOT="${CAPEMON_ROOT:-/opt/capemon}"
+CAPE_REPOSITORY="https://github.com/link1345/CAPEv2.git"
+CAPEMON_REPOSITORY="https://github.com/link1345/capemon.git"
+
+USE_UV=${USE_UV:-false}
+
+set_python_mgr() {
+    if [ "$USE_UV" = "true" ] || [ "$USE_UV" = "True" ]; then
+        PYTHON_MGR="/usr/local/bin/uv"
+        PYTHON_MGR_CMD="run"
+        PYTHON_MGR_PIP="pip"
+        PYTHON_MGR_INSTALL_PYPROJECT="sync --no-install-project"
+    else
+        PYTHON_MGR="/etc/poetry/bin/poetry"
+        PYTHON_MGR_CMD="run"
+        PYTHON_MGR_PIP="run pip"
+        PYTHON_MGR_INSTALL_PYPROJECT="install"
+    fi
+}
+
+# if a config file is present, read it in
+if [ -f "./cape-config.sh" ]; then
+    . ./cape-config.sh
+fi
+
+set_python_mgr
+
+UBUNTU_VERSION=$(lsb_release -rs)
+OS="$(uname -s)"
+MAINTAINER="$(whoami) "_"$(hostname)"
+ARCH="$(dpkg --print-architecture)"
+
+function issues() {
+    cat "No known problems yet"
 }
 
 function install_crowdsecurity() {
@@ -669,11 +693,7 @@ function redsocks2() {
 function distributed() {
     echo "[+] Configure distributed configuration"
     sudo apt-get install -y uwsgi uwsgi-plugin-python3 nginx 2>/dev/null
-    if [ "$USE_UV" = "true" ] || [ "$USE_UV" = "True" ]; then
-        sudo -u ${USER} bash -c "cd $CAPE_ROOT && $PYTHON_MGR $PYTHON_MGR_CMD pip install flask flask-restful flask-sqlalchemy requests"
-    else
-        sudo -u ${USER} bash -c "$PYTHON_MGR $PYTHON_MGR_CMD pip install flask flask-restful flask-sqlalchemy requests"
-    fi
+    sudo -u ${USER} bash -c "cd $CAPE_ROOT && $PYTHON_MGR $PYTHON_MGR_PIP install flask flask-restful flask-sqlalchemy requests"
 
     sudo cp $CAPE_ROOT/uwsgi/capedist.ini /etc/uwsgi/apps-available/cape_dist.ini
     sudo ln -s /etc/uwsgi/apps-available/cape_dist.ini /etc/uwsgi/apps-enabled
@@ -766,6 +786,8 @@ file-store.enabled: yes
 EOF
 
     sed -i '$a include:\n  - cape.yaml\n' /etc/suricata/suricata.yaml
+    getent group pcap || groupadd --system pcap
+    getent group suricata || groupadd --system suricata
     usermod -aG pcap suricata
     usermod -aG suricata "${USER}"
     # sudo chmod -R g+w /var/log/suricata/
@@ -791,7 +813,7 @@ function install_yara_x() {
     sudo -u ${USER} git clone https://github.com/VirusTotal/yara-x
     cd yara-x || return
     sudo -u ${USER} bash -c 'source "$HOME/.cargo/env" ; cargo install --path cli'
-    sudo -u ${USER} $PYTHON_MGR --directory $CAPE_ROOT/ $PYTHON_MGR_CMD pip install yara-x
+    sudo -u ${USER} $PYTHON_MGR --directory $CAPE_ROOT/ $PYTHON_MGR_PIP install yara-x
 }
 
 function install_yara_python() {
@@ -807,21 +829,12 @@ function install_yara_python() {
     # This replaces the legacy setup.py build approach
 
     # Install from PyPI
-    if [ "$USE_UV" = "true" ] || [ "$USE_UV" = "True" ]; then
-        sudo -u ${USER} bash -c "cd $CAPE_ROOT && $PYTHON_MGR pip install yara-python \
-            --no-binary :all: \
-            --config-settings=\"--global-option=build\" \
-            --config-settings=\"--global-option=--enable-cuckoo\" \
-            --config-settings=\"--global-option=--enable-magic\" \
-            --config-settings=\"--global-option=--enable-profiling\""
-    else
-        sudo -u ${USER} $PYTHON_MGR --directory $CAPE_ROOT $PYTHON_MGR_CMD pip install yara-python \
-            --no-binary :all: \
-            --config-settings="--global-option=build" \
-            --config-settings="--global-option=--enable-cuckoo" \
-            --config-settings="--global-option=--enable-magic" \
-            --config-settings="--global-option=--enable-profiling"
-    fi
+    sudo -u ${USER} $PYTHON_MGR --directory $CAPE_ROOT $PYTHON_MGR_PIP install yara-python \
+        --no-binary :all: \
+        --config-settings="--global-option=build" \
+        --config-settings="--global-option=--enable-cuckoo" \
+        --config-settings="--global-option=--enable-magic" \
+        --config-settings="--global-option=--enable-profiling"
 
     # Install from local source (commented out)
     # sudo -u ${USER} $PYTHON_MGR --directory $CAPE_ROOT $PYTHON_MGR_CMD pip install /tmp/yara-python \
@@ -912,16 +925,7 @@ function install_libvirt() {
     export_path="${temp_export_path%/*}/"
     export PKG_CONFIG_PATH=$export_path
 
-    # Run build and install within the project environment
-    # We use sudo -u cape ... to install into the user's environment managed by poetry/uv/pip
-    if [ "$USE_UV" = "true" ] || [ "$USE_UV" = "True" ]; then
-        # sudo -u ${USER} bash -c "export PKG_CONFIG_PATH=$export_path; cd $CAPE_ROOT && $PYTHON_MGR pip install /tmp/libvirt-python-${LIB_VERSION}"
-        sudo -u ${USER} bash -c "export PKG_CONFIG_PATH=$export_path; cd $CAPE_ROOT && $PYTHON_MGR pip install libvirt-python==${LIB_VERSION}"
-    elif [ "$PYTHON_MGR" = "/etc/poetry/bin/poetry" ]; then
-        sudo -u ${USER} bash -c "export PKG_CONFIG_PATH=$export_path; $PYTHON_MGR --directory $CAPE_ROOT $PYTHON_MGR_CMD pip install libvirt-python==${LIB_VERSION}"
-    else
-         sudo -u ${USER} bash -c "export PKG_CONFIG_PATH=$export_path; pip3 install libvirt-python==${LIB_VERSION}"
-    fi
+    sudo -u ${USER} bash -c "export PKG_CONFIG_PATH=$export_path; $PYTHON_MGR --directory $CAPE_ROOT $PYTHON_MGR_PIP install libvirt-python==${LIB_VERSION}"
 }
 
 function install_mongo(){
@@ -937,8 +941,24 @@ function install_mongo(){
             fi
         fi
 
+        CODENAME=$(lsb_release -cs)
+        if [ "$MONGO_VERSION" = "4.4" ]; then
+            # MongoDB 4.4 only has repositories up to Ubuntu 20.04 (focal)
+            if [ "$CODENAME" != "focal" ] && [ "$CODENAME" != "bionic" ] && [ "$CODENAME" != "xenial" ]; then
+                CODENAME="focal"
+            fi
+
+            # MongoDB 4.4 depends on libssl1.1, which is not present in Ubuntu 22.04 (jammy) and 24.04 (noble)
+            if ! dpkg -l | grep -q "libssl1.1"; then
+                echo "[+] Installing libssl1.1 for MongoDB 4.4 compatibility"
+                wget -q http://archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2_amd64.deb -O /tmp/libssl1.1.deb
+                sudo dpkg -i /tmp/libssl1.1.deb || true
+                rm -f /tmp/libssl1.1.deb
+            fi
+        fi
+
         sudo curl -fsSL "https://pgp.mongodb.com/server-${MONGO_VERSION}.asc" | sudo gpg --dearmor -o /etc/apt/keyrings/mongo.gpg --yes
-        echo "deb [signed-by=/etc/apt/keyrings/mongo.gpg arch=amd64] https://repo.mongodb.org/apt/ubuntu $(lsb_release -cs)/mongodb-org/${MONGO_VERSION} multiverse" > /etc/apt/sources.list.d/mongodb.list
+        echo "deb [signed-by=/etc/apt/keyrings/mongo.gpg arch=amd64] https://repo.mongodb.org/apt/ubuntu ${CODENAME}/mongodb-org/${MONGO_VERSION} multiverse" > /etc/apt/sources.list.d/mongodb.list
 
         sudo apt-get update 2>/dev/null
         sudo apt-get install -y libpcre3-dev numactl cron
@@ -954,7 +974,7 @@ cat >> /lib/systemd/system/enable-transparent-huge-pages.service <<EOF
 Description=Enable Transparent Hugepages (THP)
 DefaultDependencies=no
 After=sysinit.target local-fs.target
-Before=mongod.service
+Before=mongod.service mongodb.service
 [Service]
 Type=oneshot
 ExecStart=/bin/sh -c 'echo always | tee /sys/kernel/mm/transparent_hugepage/enabled > /dev/null && echo defer+madvise | tee /sys/kernel/mm/transparent_hugepage/defrag > /dev/null && echo 0 | tee /sys/kernel/mm/transparent_hugepage/khugepaged/max_ptes_none > /dev/null && echo 1 | tee /proc/sys/vm/overcommit_memory > /dev/null'
@@ -973,6 +993,18 @@ EOF
             systemctl daemon-reload
         fi
 
+        # Determine optimal GLIBC_TUNABLES setting based on kernel version.
+        # On Linux kernel 6.19 and newer, glibc.pthread.rseq=0 causes tcmalloc/rseq conflicts leading to crashes or refusal to start.
+        # We set it to 1 on kernel versions >= 6.19, allowing glibc to register rseq and tcmalloc to fall back safely.
+        RSEQ_VAL=0
+        KERNEL_MAJOR=$(uname -r | cut -d. -f1)
+        KERNEL_MINOR=$(uname -r | cut -d. -f2)
+        if [[ "$KERNEL_MAJOR" =~ ^[0-9]+$ ]] && [[ "$KERNEL_MINOR" =~ ^[0-9]+$ ]]; then
+            if [ "$KERNEL_MAJOR" -gt 6 ] || { [ "$KERNEL_MAJOR" -eq 6 ] && [ "$KERNEL_MINOR" -ge 19 ]; }; then
+                RSEQ_VAL=1
+            fi
+        fi
+
         if [ ! -f /lib/systemd/system/mongodb.service ]; then
             crontab -l | { cat; echo "@reboot /bin/mkdir -p /data/configdb && /bin/mkdir -p /data/db && /bin/chown mongodb:mongodb /data -R"; } | crontab -
             cat >> /lib/systemd/system/mongodb.service << EOF
@@ -982,7 +1014,7 @@ Wants=network.target
 After=network.target
 [Service]
 PermissionsStartOnly=true
-Environment="GLIBC_TUNABLES=glibc.pthread.rseq=0"
+Environment="GLIBC_TUNABLES=glibc.pthread.rseq=${RSEQ_VAL}"
 #ExecStartPre=/bin/mkdir -p /data/{config,}db && /bin/chown mongodb:mongodb /data -R
 # https://www.tutorialspoint.com/mongodb/mongodb_replication.htm
 ExecStart=/usr/bin/numactl --interleave=all /usr/bin/mongod --setParameter "tcmallocReleaseRate=5.0"
@@ -1000,6 +1032,14 @@ LimitNOFILE=1048576
 [Install]
 WantedBy=multi-user.target
 EOF
+        else
+            # Ensure GLIBC_TUNABLES is correctly set in existing service file
+            if grep -q 'GLIBC_TUNABLES' /lib/systemd/system/mongodb.service; then
+                sed -i "s|Environment=\"GLIBC_TUNABLES=glibc.pthread.rseq=.*\"|Environment=\"GLIBC_TUNABLES=glibc.pthread.rseq=${RSEQ_VAL}\"|g" /lib/systemd/system/mongodb.service
+            else
+                # Inject GLIBC_TUNABLES environment variable under [Service] section
+                sed -i "/\[Service\]/a Environment=\"GLIBC_TUNABLES=glibc.pthread.rseq=${RSEQ_VAL}\"" /lib/systemd/system/mongodb.service
+            fi
         fi
         sudo mkdir -p /data/{config,}db
         sudo chown mongodb:mongodb /data/ -R
@@ -1064,11 +1104,7 @@ function install_capa() {
     cd capa || return
     git pull
     git submodule update --init rules
-    if [ "$USE_UV" = "true" ] || [ "$USE_UV" = "True" ]; then
-        sudo -u ${USER} bash -c "cd $CAPE_ROOT && $PYTHON_MGR $PYTHON_MGR_CMD pip install /tmp/capa"
-    else
-        sudo -u ${USER} $PYTHON_MGR --directory $CAPE_ROOT/ $PYTHON_MGR_CMD pip install /tmp/capa
-    fi
+    sudo -u ${USER} $PYTHON_MGR --directory $CAPE_ROOT/ $PYTHON_MGR_PIP install /tmp/capa
     cd $CAPE_ROOT
     if [ -d /tmp/capa ]; then
         sudo rm -rf /tmp/capa
@@ -1234,132 +1270,50 @@ EOF
 
 function install_clamav() {
     echo "[+] Installing clamav"
-    sudo apt-get install -y clamav clamav-daemon clamav-freshclam clamav-unofficial-sigs python3-pyclamd
+    sudo apt-get install -y clamav clamav-daemon clamav-freshclam python3-pyclamd
 
-    cat >> /usr/share/clamav-unofficial-sigs/conf.d/00-clamav-unofficial-sigs.conf << EOF
-# This file contains user configuration settings for the clamav-unofficial-sigs.sh
-# Script provide by Bill Landry (unofficialsigs@gmail.com).
-# Script updates can be found at: http://sourceforge.net/projects/unofficial-sigs
-# License: BSD (Berkeley Software Distribution)
-PATH="/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin"
-export PATH
-clam_user="clamav"
-clam_group="clamav"
-setmode="yes"
-clam_dbs="/var/lib/clamav"
-clamd_pid="/var/run/clamd.pid"
-reload_dbs="no"
-reload_opt="clamdscan --reload"  # Default
-enable_random="yes"
-min_sleep_time="60"    # Default minimum is 60 seconds (1 minute).
-max_sleep_time="600"   # Default maximum is 600 seconds (10 minutes).
-# ========================
-# Sanesecurity Database(s)
-# ========================
-# http://www.sanesecurity.com/clamav/databases.htm
-ss_dbs="
-   blurl.ndb
-   junk.ndb
-   jurlbl.ndb
-   phish.ndb
-   rogue.hdb
-   sanesecurity.ftm
-   scam.ndb
-   sigwhitelist.ign2
-   spamattach.hdb
-   spamimg.hdb
-   winnow.attachments.hdb
-   winnow_bad_cw.hdb
-   winnow_extended_malware.hdb
-   winnow_malware.hdb
-   winnow_malware_links.ndb
-   doppelstern.hdb
-   bofhland_cracked_URL.ndb
-   bofhland_malware_attach.hdb
-   bofhland_malware_URL.ndb
-   bofhland_phishing_URL.ndb
-   crdfam.clamav.hdb
-   phishtank.ndb
-   porcupine.ndb
-   foxhole_filename.cdb
-   foxhole_all.cdb
-"
-# ========================
-# SecuriteInfo Database(s)
-# ========================
-si_dbs="
-   honeynet.hdb
-   securiteinfo.hdb
-   securiteinfobat.hdb
-   securiteinfodos.hdb
-   securiteinfoelf.hdb
-   securiteinfohtml.hdb
-   securiteinfooffice.hdb
-   securiteinfopdf.hdb
-   securiteinfosh.hdb
-"
-si_update_hours="4"   # Default is 4 hours (6 update checks daily).
-mbl_dbs="
-   mbl.ndb
-"
-mbl_update_hours="6"   # Default is 6 hours (4 downloads daily).
-rsync_connect_timeout="15"
-rsync_max_time="60"
-curl_connect_timeout="15"
-curl_max_time="90"
-work_dir="/usr/unofficial-dbs"   #Top level working directory
-# Sub-directory names:
-ss_dir="$work_dir/ss-dbs"        # Sanesecurity sub-directory
-si_dir="$work_dir/si-dbs"        # SecuriteInfo sub-directory
-mbl_dir="$work_dir/mbl-dbs"      # MalwarePatrol sub-directory
-config_dir="$work_dir/configs"   # Script configs sub-directory
-gpg_dir="$work_dir/gpg-key"      # Sanesecurity GPG Key sub-directory
-add_dir="$work_dir/add-dbs"      # User defined databases sub-directory
-# If you would like to make a backup copy of the current running database
-# file before updating, leave the following variable set to "yes" and a
-# backup copy of the file will be created in the production directory
-# with -bak appended to the file name.
-keep_db_backup="no"
-# If you want to silence the information reported by curl, rsync, gpg
-# or the general script comments, change the following variables to
-# "yes".  If all variables are set to "yes", the script will output
-# nothing except error conditions.
-curl_silence="no"      # Default is "no" to report curl statistics
-rsync_silence="no"     # Default is "no" to report rsync statistics
-gpg_silence="no"       # Default is "no" to report gpg signature status
-comment_silence="no"   # Default is "no" to report script comments
-# Log update information to '$log_file_path/$log_file_name'.
-enable_logging="yes"
-log_file_path="/var/log"
-log_file_name="clamav-unofficial-sigs.log"
-# If necessary to proxy database downloads, define the rsync and/or curl
-# proxy settings here.  For rsync, the proxy must support connections to
-# port 873.  Both curl and rsync proxy setting need to be defined in the
-# format of "hostname:port".  For curl, also note the -x and -U flags,
-# which must be set as "-x hostname:port" and "-U username:password".
-rsync_proxy=""
-curl_proxy=""
-# After you have completed the configuration of this file, set the
-# following variable to "yes".
-user_configuration_complete="no"
-################################################################################
-#                          END OF USER CONFIGURATION                           #
-################################################################################
-add_dbs="
-    https://raw.githubusercontent.com/wmetcalf/clam-punch/master/miscreantpunch099.ldb
-    https://raw.githubusercontent.com/wmetcalf/clam-punch/master/exexor99.ldb
-    https://raw.githubusercontent.com/twinwave-security/twinclams/master/twinclams.ldb
-    https://raw.githubusercontent.com/twinwave-security/twinclams/master/twinwave.ign2
-"
+    # Create configuration and working directories
+    sudo mkdir -p /etc/clamav-unofficial-sigs
+    sudo mkdir -p /var/lib/clamav-unofficial-sigs
+    sudo mkdir -p /var/log/clamav-unofficial-sigs
+    sudo chown -R clamav:clamav /var/lib/clamav-unofficial-sigs
+    sudo chown -R clamav:clamav /var/log/clamav-unofficial-sigs
+
+    # Download script and configuration templates from extremeshok's official repo
+    sudo wget https://raw.githubusercontent.com/extremeshok/clamav-unofficial-sigs/master/clamav-unofficial-sigs.sh -O /usr/local/sbin/clamav-unofficial-sigs.sh
+    sudo chmod 755 /usr/local/sbin/clamav-unofficial-sigs.sh
+    sudo ln -sf /usr/local/sbin/clamav-unofficial-sigs.sh /usr/local/sbin/clamav-unofficial-sigs
+
+    sudo wget https://raw.githubusercontent.com/extremeshok/clamav-unofficial-sigs/master/config/master.conf -O /etc/clamav-unofficial-sigs/master.conf
+    sudo wget https://raw.githubusercontent.com/extremeshok/clamav-unofficial-sigs/master/config/user.conf -O /etc/clamav-unofficial-sigs/user.conf
+    sudo wget https://raw.githubusercontent.com/extremeshok/clamav-unofficial-sigs/master/config/os/os.ubuntu.conf -O /etc/clamav-unofficial-sigs/os.conf
+
+    # Override configurations in user.conf
+    sudo tee -a /etc/clamav-unofficial-sigs/user.conf > /dev/null << EOF
+
+# CAPEv2 custom additions
+user_configuration_complete="yes"
+additional_dbs=(
+  "https://raw.githubusercontent.com/wmetcalf/clam-punch/master/miscreantpunch099.ldb"
+  "https://raw.githubusercontent.com/wmetcalf/clam-punch/master/exexor99.ldb"
+  "https://raw.githubusercontent.com/twinwave-security/twinclams/master/twinclams.ldb"
+  "https://raw.githubusercontent.com/twinwave-security/twinclams/master/twinwave.ign2"
+)
 EOF
-    chown root:root /usr/share/clamav-unofficial-sigs/conf.d/00-clamav-unofficial-sigs.conf
-    chmod 644 /usr/share/clamav-unofficial-sigs/conf.d/00-clamav-unofficial-sigs.conf
-    usermod -a -G ${USER} clamav
+
+    sudo usermod -a -G ${USER} clamav
     echo "$CAPE_ROOT/storage/** r," | sudo tee -a /etc/apparmor.d/local/usr.sbin.clamd
     sudo apparmor_parser -r /etc/apparmor.d/usr.sbin.clamd
     sudo systemctl enable clamav-daemon
     sudo systemctl start clamav-daemon
-    sudo -u clamav /usr/sbin/clamav-unofficial-sigs
+
+    # Run setup/installation commands of the unofficial sigs script
+    sudo /usr/local/sbin/clamav-unofficial-sigs.sh --install-cron
+    sudo /usr/local/sbin/clamav-unofficial-sigs.sh --install-logrotate
+    sudo /usr/local/sbin/clamav-unofficial-sigs.sh --install-man
+
+    # Run the script to download the initial signatures as clamav user
+    sudo -u clamav /usr/local/sbin/clamav-unofficial-sigs.sh
 }
 
 function install_CAPE() {
@@ -1377,6 +1331,9 @@ function install_CAPE() {
     fi
     chown ${USER}:${USER} -R "$CAPE_ROOT"/
     chown ${USER}:${USER} -R "$CAPEMON_ROOT"/
+    if [ "$USE_UV" = "true" ] || [ "$USE_UV" = "True" ]; then
+        sudo -u ${USER} /usr/local/bin/uv venv "$CAPE_ROOT/.venv"
+    fi
     #chown -R root:${USER} /usr/var/malheur/
     #chmod -R =rwX,g=rwX,o=X /usr/var/malheur/
     # Adapting owner permissions to the ${USER} path folder
@@ -1390,7 +1347,7 @@ function install_CAPE() {
         echo "[-] pyproject.toml not found in $CAPE_ROOT"
         return
     fi
-    sudo -u ${USER} bash -c "export PYTHON_KEYRING_BACKEND=keyring.backends.null.Keyring; CRYPTOGRAPHY_DONT_BUILD_RUST=1 $PYTHON_MGR pip install -r pyproject.toml"
+    sudo -u ${USER} bash -c "cd $CAPE_ROOT && export PYTHON_KEYRING_BACKEND=keyring.backends.null.Keyring; export CRYPTOGRAPHY_DONT_BUILD_RUST=1; $PYTHON_MGR $PYTHON_MGR_INSTALL_PYPROJECT"
 
     if [ "$DISABLE_LIBVIRT" -eq 0 ]; then
         # Integrated libvirt install
@@ -1481,11 +1438,12 @@ function install_systemd() {
     fi
 
     if [ "$USE_UV" = "true" ] || [ "$USE_UV" = "True" ]; then
+        # Remove poetry config ExecStartPre lines BEFORE replacing poetry→uv so the
+        # pattern still matches (after replacement the path no longer contains /poetry)
+        sed -i "\|^ExecStartPre=.*/poetry .*|d" /lib/systemd/system/cape-fstab.service || true
+        sed -i "\|^ExecStartPre=.*/poetry .*|d" /lib/systemd/system/cape-rooter.service || true
         sed -i "s|/etc/poetry/bin/poetry|$PYTHON_MGR|g" /lib/systemd/system/cape*.service
         sed -i "s|/etc/poetry/bin/poetry|$PYTHON_MGR|g" /lib/systemd/system/guac*.service
-        # remove poetry config commands as uv does not have them or needs them
-        sed -i "s|^ExecStartPre=.*/poetry .*||g" /lib/systemd/system/cape-fstab.service || true
-        sed -i "s|^ExecStartPre=.*/poetry .*||g" /lib/systemd/system/cape-rooter.service || true
     fi
 
     systemctl daemon-reload
@@ -1552,13 +1510,8 @@ function install_node_exporter() {
 function install_volatility3() {
     echo "[+] Installing volatility3"
     sudo apt-get install -y unzip
-    if [ "$USE_UV" = "true" ] || [ "$USE_UV" = "True" ]; then
-        sudo -u ${USER} bash -c "cd $CAPE_ROOT && $PYTHON_MGR $PYTHON_MGR_CMD pip install git+https://github.com/volatilityfoundation/volatility3"
-        vol_path=$(sudo -u ${USER} bash -c "cd $CAPE_ROOT && $PYTHON_MGR run python3 -c \"import volatility3.plugins;print(volatility3.__file__.replace('__init__.py', 'symbols/'))\"")
-    else
-        sudo -u ${USER} $PYTHON_MGR $PYTHON_MGR_CMD pip3 install git+https://github.com/volatilityfoundation/volatility3
-        vol_path=$(sudo -u ${USER} $PYTHON_MGR $PYTHON_MGR_CMD python3 -c "import volatility3.plugins;print(volatility3.__file__.replace('__init__.py', 'symbols/'))")
-    fi
+    sudo -u ${USER} bash -c "cd $CAPE_ROOT && $PYTHON_MGR $PYTHON_MGR_PIP install git+https://github.com/volatilityfoundation/volatility3"
+    vol_path=$(sudo -u ${USER} bash -c "cd $CAPE_ROOT && $PYTHON_MGR $PYTHON_MGR_CMD python3 -c \"import volatility3.plugins;print(volatility3.__file__.replace('__init__.py', 'symbols/'))\"")
 
     if [ -z "$vol_path" ]; then
         echo "[-] Could not find volatility3 path"
@@ -1646,7 +1599,7 @@ function install_guacamole() {
     sudo usermod www-data -G ${USER}
 
     cd $CAPE_ROOT
-    sudo -u ${USER} bash -c "export PYTHON_KEYRING_BACKEND=keyring.backends.null.Keyring; ${poetry_path} $PYTHON_MGR_INSTALL"
+    sudo -u ${USER} bash -c "cd $CAPE_ROOT && export PYTHON_KEYRING_BACKEND=keyring.backends.null.Keyring; $PYTHON_MGR $PYTHON_MGR_INSTALL_PYPROJECT"
     cd ..
 
     systemctl daemon-reload
@@ -1751,18 +1704,8 @@ function install_passivedns() {
 # Doesn't work ${$1,,}
 COMMAND=$(echo "$1"|tr "{A-Z}" "{a-z}")
 
-case $COMMAND in
-    '-h')
-        usage
-        exit 0;;
-esac
-
-if [ $# -eq 3 ]; then
-    sandbox_version=$2
-    IFACE_IP=$3
-elif [ $# -eq 0 ]; then
-    echo "[-] check --help"
-    exit 1
+if [ $# -ge 2 ] && [[ ! "$2" =~ ^-- ]]; then
+    IFACE_IP=$2
 fi
 
 DISABLE_MONGO_AVX_CHECK=0
@@ -1778,13 +1721,9 @@ for i in "$@"; do
         DISABLE_LIBVIRT=1
     elif [ "$i" == "--use-uv" ] || [ "$i" == "USE_UV=true" ] || [ "$i" == "USE_UV=True" ]; then
         USE_UV="true"
-        PYTHON_MGR="/usr/local/bin/uv"
-        PYTHON_MGR_CMD="run"
-        PYTHON_MGR_INSTALL=""
+        set_python_mgr
     fi
 done
-
-sandbox_version=$(echo "$sandbox_version"|tr "{A-Z}" "{a-z}")
 
 #check if start with root
 if [ "$EUID" -ne 0 ] && [[ -z "${BUILD_ENV}" ]]; then
@@ -1798,8 +1737,8 @@ case "$COMMAND" in
     install_mongo
     install_CAPE
     install_yara
-    install_systemd
     install_suricata
+    install_systemd
     install_jemalloc
     if ! crontab -l | grep -q './smtp_sinkhole.sh'; then
         crontab -l | { cat; echo "@reboot cd $CAPE_ROOT/utils/ && ./smtp_sinkhole.sh 2>/dev/null"; } | crontab -
@@ -1821,8 +1760,8 @@ case "$COMMAND" in
     install_volatility3
     install_mongo
     install_yara
-    install_systemd
     install_suricata
+    install_systemd
     install_jemalloc
     install_logrotate
     install_mitmproxy
@@ -1835,7 +1774,7 @@ case "$COMMAND" in
     fi
     # Update FLARE CAPA rules once per day
     if ! crontab -l | grep -q 'community.py -waf -cr'; then
-        crontab -l | { cat; echo "5 0 */1 * * cd $CAPE_ROOT/utils/ && sudo -u ${USER} $PYTHON_MGR --directory $CAPE_ROOT/ $PYTHON_MGR_CMD python3 community.py -waf -cr && sudo -u ${USER} $PYTHON_MGR --directory $CAPE_ROOT/ $PYTHON_MGR_CMD pip install -U flare-capa && systemctl restart cape-processor 2>/dev/null"; } | crontab -
+        crontab -l | { cat; echo "5 0 */1 * * cd $CAPE_ROOT/utils/ && sudo -u ${USER} $PYTHON_MGR --directory $CAPE_ROOT/ $PYTHON_MGR_CMD python3 community.py -waf -cr && sudo -u ${USER} $PYTHON_MGR --directory $CAPE_ROOT/ $PYTHON_MGR_PIP install -U flare-capa && systemctl restart cape-processor 2>/dev/null"; } | crontab -
     fi
     install_librenms
     if [ "$clamav_enable" -ge 1 ]; then

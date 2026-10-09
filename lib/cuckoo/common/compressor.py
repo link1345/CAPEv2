@@ -5,6 +5,8 @@ import os
 import struct
 from pathlib import Path
 
+from lib.cuckoo.common.netlog import CALL_METRIC_FIELDS
+
 log = logging.getLogger(__name__)
 
 # bson from pymongo is C so is faster
@@ -80,6 +82,9 @@ class CuckooBsonCompressor:
         self.category = None
 
     def _process_message(self, msg, data):
+        # Loop compression discards per-call timing and memory samples.
+        if any(field in msg for field in CALL_METRIC_FIELDS):
+            return False
         mtype = msg.get("type")  # message type [debug, new_process, info]
         if mtype in {"debug", "new_process", "info"}:
             self.category = msg.get("category", "None")
@@ -128,7 +133,8 @@ class CuckooBsonCompressor:
                     break
 
                 if msg:
-                    self._process_message(msg, data)
+                    if self._process_message(msg, data) is False:
+                        return False
 
     def run(self, file_path, use_mmap=False):
         if use_mmap:
@@ -147,7 +153,8 @@ class CuckooBsonCompressor:
                 return False
 
             try:
-                self._process_mmap_content(mm)
+                if self._process_mmap_content(mm) is False:
+                    return False
             finally:
                 mm.close()
 
@@ -185,7 +192,8 @@ class CuckooBsonCompressor:
                     break
 
                 if msg:
-                    self._process_message(msg, data)
+                    if self._process_message(msg, data) is False:
+                        return False
 
         return self.flush(file_path)
 

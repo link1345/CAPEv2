@@ -198,7 +198,7 @@ class BsonParser:
     def read_next_message(self):
         # self.fd.seek(0)
         while True:
-            data = self.fd.read(4)
+            data = bytes(self.fd.read(4))
             if not data:
                 return
 
@@ -211,7 +211,7 @@ class BsonParser:
                 log.critical("BSON message larger than MAX_MESSAGE_LENGTH, stopping handler")
                 return False
 
-            data += self.fd.read(blen - 4)
+            data += bytes(self.fd.read(blen - 4))
 
             if len(data) < blen:
                 log.critical("BsonParser lacking data")
@@ -230,9 +230,8 @@ class BsonParser:
             caller = dec.get("R", 0)
             parentcaller = dec.get("P", 0)
             repeated = dec.get("r", 0)
-            metrics = {field: dec[field] for field in CALL_METRIC_FIELDS if field in dec}
 
-            context = [index, repeated, 1, 0, tid, time, caller, parentcaller, metrics]
+            context = [index, repeated, 1, 0, tid, time, caller, parentcaller]
 
             if mtype == "info":
                 # API call index info message, explaining the argument names, etc.
@@ -289,7 +288,7 @@ class BsonParser:
                     log.warning("Inconsistent arg count (compared to arg names) on %s: %s names %s", dec, argnames, apiname)
                     continue
 
-                argdict = {argnames[i]: converters[i](arg) for i, arg in enumerate(args)}
+                argdict = {name: conv(arg) for name, conv, arg in zip(argnames, converters, args)}
 
                 if apiname == "__process__":
                     # Special new process message from cuckoomon.
@@ -328,6 +327,7 @@ class BsonParser:
                 arguments = list(argdict.items())
                 arguments += list(dec.get("aux", {}).items())
 
+                context.append({field: dec[field] for field in CALL_METRIC_FIELDS if field in dec})
                 self.fd.log_call(context, apiname, category, arguments)
 
             return True
@@ -421,8 +421,7 @@ class ProtobufParser:
 
             arguments = []
             if len(call.arguments) == len(argnames):
-                 for i, val in enumerate(call.arguments):
-                     arguments.append((argnames[i], converters[i](val)))
+                arguments = [(name, conv(val)) for name, conv, val in zip(argnames, converters, call.arguments)]
 
             self.fd.log_call(context, apiname, category, arguments)
 

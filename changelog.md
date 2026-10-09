@@ -1,3 +1,49 @@
+### [08.10.2026]
+* `extra/browser_extension`: capture `requestBody` (`formData` and decoded `raw` bytes up to 4 KB) via `webRequest.onBeforeRequest`, record HTTP `statusCode` in `onCompleted`, correlate lifecycle events by `requestId` with O(1) deduplication, debounce event flushing, and fix the `browser.downloads.onChanged` listener registration.
+
+### [06.10.2026]
+* Browser extension (URL analysis with `firefox_ext`/`chromium_ext` and `extra/browser_extension`):
+    * `browsermonitor`: find the requests log written by agent >= 0.20 (random `%TEMP%` folder without the `tmp` prefix) and upload the last complete version once, when the analysis ends.
+    * `firefox_ext`/`chromium_ext`: stop returning the `webbrowser.open()` bool as a PID, which ended the analysis a few seconds after opening the URL.
+    * Agent 0.23: `/browser_extension` releases its lock on errors and writes the log atomically as UTF-8.
+
+### [16.09.2026]
+* Monitor updates:
+    * Misc enhancements & fixes (see capemon repo for details)
+
+
+### [22.08.2026]
+* Performance & Database Infrastructure:
+    * **psycopg3 Support**: Upgraded the PostgreSQL database connection driver to `psycopg` (v3) for modern async capability and massive performance gains.
+    * **In-Memory Connection Upgrader**: Added a seamless backward-compatibility layer in `lib/cuckoo/core/database.py`. If `postgresql://` is used with psycopg v3 installed, CAPEv2 automatically and transparently upgrades it in-memory to use the `postgresql+psycopg://` driver, preventing any startup `ImportError` or configuration crashes!
+
+### [31.07.2026]
+* Remus detection & dynamic config extraction
+
+### [15.07.2026]
+* Monitor update: Fix issue with NtWriteFile hook causing detonation failures (e.g. 9b1717eb154011b52aa24e4d6848976a9aafff2665f3171265aa767d5951be6c)
+
+### [07.07.2026]
+* Monitor updates:
+    * New hooks for SystemFunction036, SystemFunction040, SystemFunction041 (RtlGenRandom, RtlEncryptMemory, RtlDecryptMemory), Thread32First, Thread32Next, clipboard functions
+    * Enable hooks: MapFileAndCheckSumA, GetVolumeInformationA, GetVolumeInformationW & NtQueryVolumeInformationFile
+    * Crypto hook overhaul
+    * Misc fixes
+
+### [08.06.2026]
+* Threat Discovery & Hunting Workstation Dashboard:
+    * Integrated centralized dynamic multi-faceted database clustering across 12 categories (Domains, IPs, Mutexes, Dropped Files, Commands, Registry Keys, Hashes, ImpHashes, and Signatures).
+    * Created dynamic, cascading, auto-reloaded JSON configuration cacher (`conf/hunt.json`) with hierarchical lookup order (`custom/conf` ➔ `conf` ➔ `conf/default`).
+    * Built high-performance, memory-speed caching system utilizing OS modification-time (`mtime`) checks for instant reloading without disk parsing or server restarts.
+    * Integrated inline threat intelligence OSINT pivoting links (VirusTotal, Shodan, Censys, MalwareBazaar, and AlienVault OTX) and transaction-safe, sanitized AJAX-based task tagging group actions.
+    * Added comprehensive unit testing covering all view states, error handling, and security measures.
+
+### [05.06.2026]
+* Monitor updates:
+    * NtCreateUserProcess hook: Dynamically patch ping commandline to thwart ping delays (e.g. Formbook/Xloader)
+    * Debugger: Persistent software breakpoints via softbpmode=1 (default is one-shot)
+    * TLS capture improvements
+
 ### [01.06.2026]
 * Monitor update: Fix standalone mode broken since August
 

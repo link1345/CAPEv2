@@ -115,6 +115,113 @@ class TestDatabaseEngine:
             db.add_url("http://foo.bar")
             assert db.session.scalar(count_stmt) == 2
 
+    @pytest.mark.parametrize(
+        "detected_platform",
+        ("windows", "linux"),
+    )
+    def test_demuxed_file_platform_is_used_for_task(
+        self,
+        db: _Database,
+        temp_filename: str,
+        monkeypatch,
+        detected_platform,
+    ):
+        extracted_file = temp_filename.encode()
+
+        monkeypatch.setattr(
+            tasking,
+            "demux_sample",
+            lambda *_args, **_kwargs: (
+                [(extracted_file, detected_platform)],
+                [],
+            ),
+        )
+
+        with db.session.begin():
+            task_ids, details = db.demux_sample_and_add_to_db(
+                file_path=temp_filename,
+                platform="",
+            )
+
+        assert details == {}
+        assert len(task_ids) == 1
+
+        with db.session.begin():
+            task = db.session.get(Task, task_ids[0])
+            assert task.platform == detected_platform
+
+    @pytest.mark.parametrize(
+        "detected_platform,expected_labels",
+        (
+            ("windows", {"win-label-1", "win-label-2"}),
+            ("linux", {"linux-label-1", "linux-label-2"}),
+        ),
+    )
+    def test_machine_all_uses_demuxed_platform(
+        self,
+        db: _Database,
+        temp_filename: str,
+        monkeypatch,
+        detected_platform,
+        expected_labels,
+    ):
+        extracted_file = temp_filename.encode()
+
+        monkeypatch.setattr(
+            tasking,
+            "demux_sample",
+            lambda *_args, **_kwargs: (
+                [(extracted_file, detected_platform)],
+                [],
+            ),
+        )
+
+        with db.session.begin():
+            self.add_machine(
+                db,
+                name="win-name-1",
+                label="win-label-1",
+                platform="windows",
+            )
+            self.add_machine(
+                db,
+                name="win-name-2",
+                label="win-label-2",
+                platform="windows",
+            )
+            self.add_machine(
+                db,
+                name="linux-name-1",
+                label="linux-label-1",
+                platform="linux",
+            )
+            self.add_machine(
+                db,
+                name="linux-name-2",
+                label="linux-label-2",
+                platform="linux",
+            )
+
+            task_ids, details = db.demux_sample_and_add_to_db(
+                file_path=temp_filename,
+                platform="",
+                machine="all",
+            )
+
+        assert details == {}
+        assert len(task_ids) == 2
+
+        with db.session.begin():
+            tasks = [
+                db.session.get(Task, task_id)
+                for task_id in task_ids
+            ]
+
+            assert {task.machine for task in tasks} == expected_labels
+            assert {task.platform for task in tasks} == {
+                detected_platform
+            }
+
     def test_error_exists(self, db: _Database):
         err_msg = "A" * 1024
         with db.session.no_autoflush:
@@ -964,6 +1071,35 @@ class TestDatabaseEngine:
             assert len(tasks) == 1
             assert tasks[0].id == t3
 
+    def test_delete_tasks_after_read_commits(self, db: _Database, temp_filename):
+        """Test that delete_tasks and delete_task commit even after a read operation without an outer begin."""
+        with db.session.begin():
+            t1 = db.add_url("https://1.com")
+            t2 = db.add_path(temp_filename, tags="x86")
+            t3 = db.add_url("https://3.com")
+
+        # Read tasks first (starts an implicit transaction in SQLAlchemy 2.0)
+        pending = db.list_tasks(id_after=(t1 - 1), id_before=(t3 + 1))
+        assert len(pending) == 3
+
+        # Call delete_tasks without outer with db.session.begin()
+        assert db.delete_tasks(task_ids=[t1, t2])
+
+        # Remove the session to simulate cleaner script exit
+        db.session.remove()
+
+        # In a fresh session, verify t1 and t2 were committed as deleted
+        remaining = db.list_tasks(id_after=(t1 - 1), id_before=(t3 + 1))
+        assert len(remaining) == 1
+        assert remaining[0].id == t3
+
+        # Now test delete_task singular after read without outer begin
+        assert db.delete_task(t3)
+        db.session.remove()
+
+        remaining_after_single = db.list_tasks(id_after=(t1 - 1), id_before=(t3 + 1))
+        assert len(remaining_after_single) == 0
+
     def test_view_sample(self, db: _Database):
         with db.session.begin():
             samples = []
@@ -1484,3 +1620,33 @@ class TestDatabaseEngine:
                 assert len(output_machines) == expected_result
             else:
                 assert output_machines.count() == expected_result
+
+    def test_id_coercion_robustness(self, db: _Database, temp_filename: str):
+        with db.session.begin():
+            t1 = db.add_path(temp_filename)
+
+        with db.session.begin():
+            # Test view_task with string task_id
+            task = db.view_task(str(t1))
+            assert task is not None
+            assert task.id == t1
+
+            # Test view_task with invalid task_id
+            assert db.view_task("not-an-int") is None
+
+            # Test view_errors with invalid task_id
+            assert db.view_errors("not-an-int") == []
+
+            # Test set_vnc_port with invalid task_id (should not raise exception)
+            db.set_vnc_port("not-an-int", 5901)
+
+        with db.session.begin():
+            # Test guest_get_status/set_status with string and invalid task_id
+            assert db.guest_get_status(str(t1)) is None
+            assert db.guest_get_status("not-an-int") is None
+            db.guest_set_status("not-an-int", "running")
+
+        with db.session.begin():
+            assert db.get_parent_sample_from_task(str(t1)) is None
+            assert db.get_parent_sample_from_task("not-an-int") is None
+

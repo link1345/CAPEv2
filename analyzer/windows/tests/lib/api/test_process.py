@@ -1,12 +1,32 @@
 import os
 import threading
 import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, mock_open, patch
 
 from lib.api.process import Process
 
 
 class ProcessTests(unittest.TestCase):
+    def test_api_call_metrics_option_reaches_monitor(self):
+        for value in (None, "0", "1"):
+            with self.subTest(value=value):
+                options = {} if value is None else {"api-call-metrics": value}
+                process = Process(options=options, config=MagicMock(ip="127.0.0.1", port=2042), pid=1234)
+                monitor_file = mock_open()
+                with (
+                    patch("lib.api.process.open", monitor_file),
+                    patch("lib.api.process.LogServer"),
+                    patch("lib.api.process.LOGSERVER_POOL", {}),
+                    patch.object(Process, "process_num", 0),
+                ):
+                    process.write_monitor_config(interest="C:\\sample.exe")
+                written = "".join(call.args[0] for call in monitor_file().write.call_args_list)
+                if value is None:
+                    self.assertNotIn("api-call-metrics=", written)
+                else:
+                    self.assertIn(f"api-call-metrics={value}\n", written)
+                self.assertIn("host-ip=127.0.0.1\n", written)
+
     @patch("lib.api.process.PSAPI", MagicMock(), create=True)
     def test_unknown_image_name(self):
         process = Process()

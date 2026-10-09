@@ -190,6 +190,9 @@ Hooking & Logging
 - ``trace-times`` / ``tt``: Enable timing information in instruction traces.
 - ``buffer-max`` / ``large-buffer-max``: Max size for standard and large API log buffers.
 - ``api-rate-cap`` / ``api-cap``: Limits for the rate and total number of API logs.
+- ``api-call-metrics``: ``0`` でAPIコールの時間・メモリ計測を無効、``1`` で有効（省略時も有効）。
+  無効時も通常のAPIログは記録されます。時間はフック開始からログ記録時まで、メモリはプロセス全体の使用量で、CPU使用率ではありません。
+  この設定に対応したcapemon DLLが必要です。無効時の計測欄は ``—`` と表示されます。
 - ``no-logs`` / ``disable-logging``: Divert or completely disable the analysis log.
 
 Dumping & Payloads
